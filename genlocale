@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # stop in a clean way
 trap cleanupandexit 1 2 3 15
 
