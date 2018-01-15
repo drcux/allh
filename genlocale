@@ -1,0 +1,97 @@
+#!/bin/bash
+
+
+# stop in a clean way
+trap cleanupandexit 0 1 2 3 15
+
+# print help message 
+usage()
+{
+cat << EOF 
+usage: $0 options
+
+With genlocale you can create needed locale files for arch linux.
+
+ -h             Helpmessage
+ -l     LANG    Choose language
+ -r     DIR     Root file system
+ -x             With XOrg
+
+Example:
+
+genlocale -l de_DE -r /mnt -x
+
+EOF
+}
+
+cleanupandexit()
+{
+echo $message
+exit $rc
+}
+
+# start as root?
+if [ $UID -ne 0 ]
+    then
+        message="# ERROR: Not running as UID=0!"
+        exit 1
+fi
+
+# optargs
+while getopts "l:r:xh" OPTION
+do
+    case $OPTION in
+        h)
+            usage
+            exit 1
+            ;;
+        l)
+            lang=$OPTARG
+            ;;
+        r)
+            rootfs=$OPTARG
+            ;;
+        x)
+            xorg=1
+            ;;
+        *)  usage; exit 1
+    esac
+done
+
+# check required options
+
+# $lang
+if [ -z $lang ]
+    then
+        rc=1; message="Language not given!"; cleanupandexit
+fi
+# $rootfs
+if [ -z $rootfs ]
+    then
+        rc=1; message="Rootfs not given!"; cleanupandexit
+fi
+
+# check $rootfs
+
+if [ ! -e "$rootfs/etc/locale.gen" ]
+    then
+        rc=1; message="Rootfs $rootfs isn't a install directory!"; cleanupandexit
+fi
+
+# check $lang
+
+if ( ! grep -e "$LANG" "$rootfs/etc/locale.gen" 1> /dev/null )
+    then
+        rc=1; message="Language $lang doesn't exist!"; cleanupandexit
+fi
+
+# edit locale.gen
+
+# reset
+sed -ie "/#/!s/^/#/" "$rootfs/etc/locale.gen"
+# set language
+sed -ie "s/#$lang/$lang/g" "$rootfs/etc/locale.gen"
+
+# #### test ####
+echo $lang $rootfs $xorg
+rc=0; message=OK; cleanupandexit
