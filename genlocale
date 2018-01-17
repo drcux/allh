@@ -79,7 +79,7 @@ fi
 
 # check $lang
 
-if ( ! grep -e "$LANG" "$rootfs/etc/locale.gen" 1> /dev/null )
+if ! grep -q -e "$LANG" "$rootfs/etc/locale.gen"
     then
         rc=1; message="Language $lang doesn't exist!"; cleanupandexit
 fi
